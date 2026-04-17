@@ -13,7 +13,7 @@ Colección de 15 proyectos de **Inteligencia Artificial** implementados en Java 
 #### Gato (Tic-Tac-Toe) con Minimax
 IA imbatible usando el algoritmo Minimax clásico.
 
-![Gato Minimax](juego_Gato_ALGORITHM_Minimax/Assets/img/inicio_gato_minimax.png)
+![Gato Minimax](juego_Gato_ALGORITHM_Minimax/Assets/img/cpu_gana.png)
 
 [Ver proyecto](juego_Gato_ALGORITHM_Minimax/)
 
@@ -22,7 +22,7 @@ IA imbatible usando el algoritmo Minimax clásico.
 #### Gato (Tic-Tac-Toe) con Negamax
 IA con tres niveles de dificultad usando Negamax.
 
-![Gato Negamax](JUEGO_Gato_ALGORITHM_NegamaX/Assets/img/seleccion_dificultad.png)
+![Gato Negamax](JUEGO_Gato_ALGORITHM_NegamaX/Assets/img/ejecucion_nivel_dificil.png)
 
 [Ver proyecto](JUEGO_Gato_ALGORITHM_NegamaX/)
 
@@ -31,7 +31,7 @@ IA con tres niveles de dificultad usando Negamax.
 #### Conecta 4 con Negamax
 Juego de Conecta 4 con IA basada en Negamax.
 
-![Conecta 4](Juego_Game_Conecta4/Assets/img/inicio_juego.png)
+![Conecta 4](Juego_Game_Conecta4/Assets/img/gana_amarillo.png)
 
 [Ver proyecto](Juego_Game_Conecta4/)
 
@@ -49,7 +49,7 @@ Buscaminas con flood-fill iterativo y múltiples dificultades.
 #### Sopa de Letras
 Sopa de letras con resolución automática y dark theme.
 
-![Sopa de letras](Juego_Game_Sopa%20de%20letras%20java/Assets/img/inicio_sopa.png)
+![Sopa de letras](Juego_Game_Sopa%20de%20letras%20java/Assets/img/sopa_completa.png)
 
 [Ver proyecto](Juego_Game_Sopa%20de%20letras%20java/)
 

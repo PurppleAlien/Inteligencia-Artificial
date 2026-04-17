@@ -1,0 +1,125 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{parskip}
+\usepackage{amsmath}
+\usepackage{hyperref}
+
+\geometry{margin=2.5cm}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray},
+  breaklines=true, frame=single, language=Java,
+  numbers=left, numberstyle=\tiny\color{gray}
+}
+
+\title{\textbf{N-Reinas con Backtracking}\\
+  \large Documentación Técnica}
+\author{Inteligencia Artificial}
+\date{}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Descripción del Problema}
+El problema de las \textbf{N-Reinas} consiste en colocar $N$ reinas en un tablero de $N \times N$ de forma que ninguna reina ataque a otra. Dos reinas se atacan si comparten fila, columna o diagonal.
+
+\subsection{Número de soluciones}
+\begin{center}
+\begin{tabular}{|c|r|}
+\hline
+\textbf{N} & \textbf{Soluciones} \\
+\hline
+4  & 2 \\
+5  & 10 \\
+6  & 4 \\
+7  & 40 \\
+8  & 92 \\
+11 & 2,680 \\
+14 & 365,596 \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Algoritmo de Backtracking}
+
+\subsection{Estrategia}
+Se coloca una reina por fila. Para cada fila se prueba cada columna; si la posición es segura, se avanza a la siguiente fila. Si ninguna columna es válida, se retrocede (backtrack) a la fila anterior.
+
+\subsection{Implementación}
+\begin{lstlisting}
+void colocarReina(int fila) {
+    if (fila == N) {
+        soluciones++;
+        guardarSolucion(tablero.clone());
+        return;
+    }
+    for (int col = 0; col < N; col++) {
+        if (esSeguro(fila, col)) {
+            tablero[fila] = col; // reina en (fila,col)
+            colocarReina(fila + 1);
+            tablero[fila] = -1; // backtrack
+        }
+    }
+}
+\end{lstlisting}
+
+\subsection{Verificación de seguridad}
+Una posición $(fila, col)$ es segura si ninguna reina ya colocada la ataca:
+
+\begin{lstlisting}
+boolean esSeguro(int fila, int col) {
+    for (int f = 0; f < fila; f++) {
+        int c = tablero[f];
+        // misma columna
+        if (c == col) return false;
+        // diagonal (diferencia de fila == diferencia de col)
+        if (Math.abs(f - fila) == Math.abs(c - col))
+            return false;
+    }
+    return true;
+}
+\end{lstlisting}
+
+No es necesario verificar filas porque se coloca exactamente una reina por fila.
+
+\section{Visualización en Tiempo Real}
+
+El visualizador muestra cada paso del backtracking:
+\begin{itemize}
+  \item \textbf{Colocación}: se dibuja la reina en color verde.
+  \item \textbf{Backtrack}: la reina se elimina y se muestra en rojo momentáneamente.
+  \item \textbf{Solución encontrada}: todo el tablero se resalta en amarillo.
+\end{itemize}
+
+La animación usa un \texttt{javax.swing.Timer} con delay configurable (10ms a 500ms) para controlar la velocidad de visualización.
+
+\section{Representación del Tablero}
+
+El tablero se representa como un arreglo \texttt{int[N]} donde \texttt{tablero[fila] = columna} indica que la reina de esa fila está en esa columna. Esto garantiza exactamente una reina por fila desde el diseño de la estructura de datos.
+
+\section{Complejidad}
+
+\begin{itemize}
+  \item \textbf{Peor caso sin poda}: $O(N^N)$
+  \item \textbf{Con backtracking}: se poda enormemente el árbol. Para $N=8$ solo se exploran $\sim$15,720 nodos de los $8^8 = 16{,}777{,}216$ posibles.
+  \item \textbf{Optimización}: se pueden usar conjuntos de bits para verificar columnas y diagonales en $O(1)$.
+\end{itemize}
+
+\section{Interfaz Gráfica}
+
+\begin{itemize}
+  \item El tablero se dibuja con \texttt{paintComponent()}, alternando colores claro/oscuro.
+  \item Las reinas se representan con el símbolo \texttt{Q} o con iconos personalizados.
+  \item Selector de tamaño $N$ (de 4 a 14).
+  \item Contador de soluciones encontradas en tiempo real.
+\end{itemize}
+
+\end{document}

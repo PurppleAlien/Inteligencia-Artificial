@@ -1,0 +1,111 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{parskip}
+\usepackage{amsmath}
+\usepackage{hyperref}
+
+\geometry{margin=2.5cm}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray},
+  breaklines=true, frame=single, language=Java,
+  numbers=left, numberstyle=\tiny\color{gray}
+}
+
+\title{\textbf{Algoritmo de Wang --- Demostrador de Teoremas v1}\\
+  \large Documentación Técnica}
+\author{Inteligencia Artificial}
+\date{}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Descripción del Proyecto}
+Primera versión del demostrador de teoremas basado en el \textbf{Algoritmo de Wang} (1960). Determina automáticamente si un argumento lógico proposicional es una tautología usando el cálculo de secuentes.
+
+\section{Fundamento Teórico}
+
+\subsection{Secuentes}
+Un \textbf{secuente} tiene la forma $\Gamma \vdash \Delta$ donde:
+\begin{itemize}
+  \item $\Gamma$ (antecedente): conjunto de premisas
+  \item $\Delta$ (consecuente): conjunto de conclusiones
+\end{itemize}
+El secuente es \textbf{válido} si, cuando todas las fórmulas de $\Gamma$ son verdaderas, al menos una de $\Delta$ también lo es.
+
+\subsection{Axioma de cierre}
+Una rama se \textbf{cierra} (es válida) cuando la misma fórmula aparece en el antecedente y en el consecuente: $A, \Gamma \vdash \Delta, A$.
+
+\section{Reglas de Inferencia}
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Regla} & \textbf{Nombre} & \textbf{Transformación} \\
+\hline
+$\neg L$ & Negación-izq. & $\neg A, \Gamma \vdash \Delta \Rightarrow \Gamma \vdash A, \Delta$ \\
+$\neg R$ & Negación-der. & $\Gamma \vdash \neg A, \Delta \Rightarrow A, \Gamma \vdash \Delta$ \\
+$\wedge L$ & Conjunción-izq. & $A \wedge B, \Gamma \vdash \Delta \Rightarrow A, B, \Gamma \vdash \Delta$ \\
+$\rightarrow L$ & Implicación-izq. & $A \rightarrow B, \Gamma \vdash \Delta \Rightarrow \neg A, B, \Gamma \vdash \Delta$ \\
+$\rightarrow R$ & Implicación-der. & $\Gamma \vdash A \rightarrow B \Rightarrow A, \Gamma \vdash B$ \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Implementación del Algoritmo}
+
+\begin{lstlisting}
+boolean esValido(List<String> antecedente,
+                 List<String> consecuente) {
+    // Caso base: axioma de cierre
+    for (String f : antecedente)
+        if (consecuente.contains(f)) return true;
+
+    // Aplicar reglas al antecedente
+    for (String f : antecedente) {
+        if (f.startsWith("!")) { // negacion izq
+            List<String> nuevoAnt = sin(antecedente, f);
+            List<String> nuevoCons = con(consecuente,
+                                          f.substring(1));
+            return esValido(nuevoAnt, nuevoCons);
+        }
+        if (f.contains("->")) { // implicacion izq
+            String[] partes = f.split("->");
+            List<String> nuevoAnt = sin(antecedente, f);
+            nuevoAnt.add("!" + partes[0]);
+            nuevoAnt.add(partes[1]);
+            return esValido(nuevoAnt, consecuente);
+        }
+        // ... más reglas
+    }
+    return false; // no se pudo cerrar
+}
+\end{lstlisting}
+
+\section{Parser de Fórmulas}
+
+El parser convierte la entrada del usuario en un árbol sintáctico:
+\begin{itemize}
+  \item \texttt{!A} → negación $\neg A$
+  \item \texttt{A\&B} → conjunción $A \wedge B$
+  \item \texttt{A|B} → disyunción $A \vee B$
+  \item \texttt{A->B} → implicación $A \rightarrow B$
+\end{itemize}
+
+\section{Interfaz Gráfica}
+
+\begin{itemize}
+  \item Campos de texto para ingresar premisas y conclusión.
+  \item Panel de salida que muestra cada paso de la demostración.
+  \item Resultado final: \textbf{VÁLIDO} (tautología) o \textbf{NO VÁLIDO} (refutable).
+\end{itemize}
+
+\end{document}

@@ -1,0 +1,119 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{parskip}
+\usepackage{amsmath}
+\usepackage{hyperref}
+
+\geometry{margin=2.5cm}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray},
+  breaklines=true,
+  frame=single,
+  language=Java,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'\i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1 {Á}{{\'A}}1 {É}{{\'E}}1 {Ó}{{\'O}}1
+}
+
+\title{\textbf{Sopa de Letras con Resolución Automática}\\
+  \large Documentación Técnica}
+\author{Inteligencia Artificial}
+\date{}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Descripción del Proyecto}
+Juego de \textbf{Sopa de Letras} desarrollado en Java con Swing y dark theme. Las palabras se cargan desde un archivo externo \texttt{palabras.txt}. Incluye resolución automática con animación, temporizador por palabra y generación dinámica de nuevas sopas.
+
+\section{Generación de la Sopa}
+
+\subsection{Cargar palabras}
+Las palabras se leen del archivo \texttt{palabras.txt}, una por línea, y se almacenan en una lista. Se normalizan a mayúsculas y se eliminan tildes para simplificar la comparación.
+
+\subsection{Colocar palabras en el tablero}
+Para cada palabra se intentan posiciones y direcciones al azar hasta encontrar un espacio válido:
+
+\begin{lstlisting}
+boolean colocarPalabra(String palabra) {
+    int intentos = 0;
+    while (intentos++ < 1000) {
+        int fila = rand.nextInt(FILAS);
+        int col  = rand.nextInt(COLS);
+        int dir  = rand.nextInt(8); // 8 direcciones
+
+        if (cabe(palabra, fila, col, dir) &&
+            noColisiona(palabra, fila, col, dir)) {
+            escribir(palabra, fila, col, dir);
+            return true;
+        }
+    }
+    return false; // no pudo colocarse
+}
+\end{lstlisting}
+
+Las 8 direcciones son: derecha, izquierda, abajo, arriba y las 4 diagonales.
+
+\subsection{Rellenar espacios vacíos}
+Después de colocar todas las palabras, las celdas vacías se llenan con letras aleatorias del abecedario español para ocultar las palabras.
+
+\section{Algoritmo de Búsqueda (Solver)}
+
+El solver busca cada palabra verificando todas las celdas del tablero como posible punto de inicio:
+
+\begin{lstlisting}
+int[] buscarPalabra(String palabra) {
+    int[][] dirs = {{0,1},{0,-1},{1,0},{-1,0},
+                   {1,1},{1,-1},{-1,1},{-1,-1}};
+    for (int f = 0; f < FILAS; f++) {
+        for (int c = 0; c < COLS; c++) {
+            for (int[] dir : dirs) {
+                if (coincide(palabra, f, c, dir))
+                    return new int[]{f, c,
+                                     dir[0], dir[1]};
+            }
+        }
+    }
+    return null;
+}
+\end{lstlisting}
+
+La función \texttt{coincide()} compara carácter por carácter en la dirección indicada, verificando que no salga del tablero.
+
+\section{Resaltado y Animación}
+
+Cuando se encuentra una palabra (manual o automáticamente):
+\begin{itemize}
+  \item Se calculan todas las celdas que ocupa.
+  \item Se pintan en color destacado usando \texttt{paintComponent()}.
+  \item La palabra se marca como encontrada en la lista lateral.
+  \item Para \textbf{Resolver Todo}, se usa un \texttt{javax.swing.Timer} con 300ms entre palabras para crear un efecto de animación.
+\end{itemize}
+
+\section{Detección Manual}
+
+El jugador hace clic en la primera letra de la palabra y arrastra hasta la última. Se registran las coordenadas de inicio y fin del arrastre, y se valida si forman una línea recta en alguna de las 8 direcciones. Si la palabra formada coincide con alguna de la lista, se resalta automáticamente.
+
+\section{Temporizador}
+
+Cada palabra tiene un tiempo límite configurable. Un \texttt{javax.swing.Timer} decrementa el contador cada segundo y actualiza la etiqueta de tiempo. Si el tiempo llega a 0, se pasa automáticamente a la siguiente palabra.
+
+\section{Interfaz Gráfica}
+
+\begin{itemize}
+  \item \textbf{Panel de tablero}: dibujado con \texttt{paintComponent()}, fondo oscuro (\texttt{\#1e1e1e}), letras en blanco.
+  \item \textbf{Panel lateral}: lista de palabras a encontrar con estado visual (tachadas las encontradas).
+  \item \textbf{Botones}: ``Nueva Sopa'', ``Siguiente Palabra'', ``Resolver Todo''.
+  \item Mouse listeners detectan inicio y fin del arrastre del jugador.
+\end{itemize}
+
+\end{document}

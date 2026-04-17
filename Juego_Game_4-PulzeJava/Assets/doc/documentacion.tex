@@ -1,0 +1,143 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{parskip}
+\usepackage{amsmath}
+\usepackage{hyperref}
+
+\geometry{margin=2.5cm}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray},
+  breaklines=true, frame=single, language=Java,
+  numbers=left, numberstyle=\tiny\color{gray}
+}
+
+\title{\textbf{4-Puzzle Lineal --- BFS y DFS}\\
+  \large Documentación Técnica}
+\author{Inteligencia Artificial}
+\date{}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Descripción del Problema}
+El \textbf{4-Puzzle Lineal} es un problema de búsqueda donde se tiene un arreglo de 4 elementos que deben quedar en orden ascendente $[1,2,3,4]$ usando únicamente tres operadores de intercambio.
+
+\subsection{Operadores}
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Operador} & \textbf{Acción} & \textbf{Posiciones} \\
+\hline
+Izquierdo & Intercambia pos 1$\leftrightarrow$2 & índices 0 y 1 \\
+Central   & Intercambia pos 2$\leftrightarrow$3 & índices 1 y 2 \\
+Derecho   & Intercambia pos 3$\leftrightarrow$4 & índices 2 y 3 \\
+\hline
+\end{tabular}
+\end{center}
+
+El espacio de búsqueda máximo es $4! = 24$ estados únicos.
+
+\section{BFS --- Búsqueda por Amplitud}
+
+Explora nivel a nivel usando una cola FIFO. Garantiza la ruta con el \textbf{mínimo número de movimientos}.
+
+\begin{lstlisting}
+int[] resolverBFS(int[] estadoInicial) {
+    Queue<Nodo> cola = new LinkedList<>();
+    Set<String> visitados = new HashSet<>();
+    cola.add(new Nodo(estadoInicial, null));
+    visitados.add(Arrays.toString(estadoInicial));
+
+    while (!cola.isEmpty()) {
+        Nodo actual = cola.poll();
+        if (esMeta(actual.estado)) return actual;
+
+        for (int[] hijo : generarHijos(actual.estado)) {
+            String clave = Arrays.toString(hijo);
+            if (!visitados.contains(clave)) {
+                visitados.add(clave);
+                cola.add(new Nodo(hijo, actual));
+            }
+        }
+    }
+    return null;
+}
+\end{lstlisting}
+
+\section{DFS --- Búsqueda por Profundidad}
+
+Explora profundamente usando una pila LIFO. No garantiza la solución óptima pero puede ser más rápido en algunos casos.
+
+\begin{lstlisting}
+int[] resolverDFS(int[] estadoInicial) {
+    Stack<Nodo> pila = new Stack<>();
+    Set<String> visitados = new HashSet<>();
+    pila.push(new Nodo(estadoInicial, null));
+
+    while (!pila.isEmpty()) {
+        Nodo actual = pila.pop();
+        String clave = Arrays.toString(actual.estado);
+        if (visitados.contains(clave)) continue;
+        visitados.add(clave);
+
+        if (esMeta(actual.estado)) return actual;
+        for (int[] hijo : generarHijos(actual.estado))
+            pila.push(new Nodo(hijo, actual));
+    }
+    return null;
+}
+\end{lstlisting}
+
+\section{Generación de Hijos}
+
+Cada estado genera hasta 3 hijos aplicando los 3 operadores:
+
+\begin{lstlisting}
+List<int[]> generarHijos(int[] estado) {
+    List<int[]> hijos = new ArrayList<>();
+    for (int i = 0; i < 3; i++) { // 3 intercambios
+        int[] hijo = estado.clone();
+        int tmp = hijo[i];
+        hijo[i] = hijo[i+1];
+        hijo[i+1] = tmp;
+        hijos.add(hijo);
+    }
+    return hijos;
+}
+\end{lstlisting}
+
+\section{Visualización Animada}
+
+Una vez obtenida la solución, se reconstruye el camino desde el nodo meta hasta el inicial siguiendo los punteros padre. La animación se implementa con \texttt{javax.swing.Timer}:
+
+\begin{itemize}
+  \item Cada 500ms se muestra el siguiente estado del camino.
+  \item El tablero visual actualiza los colores de las celdas intercambiadas.
+  \item Se muestra el número de paso actual sobre el total.
+\end{itemize}
+
+\section{Comparativa BFS vs DFS en este problema}
+
+\begin{center}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Característica} & \textbf{BFS} & \textbf{DFS} \\
+\hline
+Solución óptima & Sí & No siempre \\
+Memoria usada & Mayor & Menor \\
+Velocidad & Similar & Similar \\
+Espacio explorado & Completo por nivel & Profundidad primero \\
+\hline
+\end{tabular}
+\end{center}
+
+\end{document}

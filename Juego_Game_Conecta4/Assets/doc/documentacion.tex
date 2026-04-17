@@ -1,0 +1,143 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{parskip}
+\usepackage{amsmath}
+\usepackage{hyperref}
+
+\geometry{margin=2.5cm}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray},
+  breaklines=true,
+  frame=single,
+  language=Java,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'\i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1 {Á}{{\'A}}1 {É}{{\'E}}1 {Ó}{{\'O}}1
+}
+
+\title{\textbf{Conecta 4 con Negamax}\\
+  \large Documentación Técnica}
+\author{Inteligencia Artificial}
+\date{}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Descripción del Proyecto}
+Implementación del juego \textbf{Conecta 4} con inteligencia artificial basada en \textbf{Negamax}. El jugador humano compite contra la CPU en un tablero de 6 filas por 7 columnas (configurable). El objetivo es alinear 4 fichas consecutivas en horizontal, vertical o diagonal antes que el oponente.
+
+\section{Reglas del Juego}
+
+\begin{itemize}
+  \item El tablero tiene 6 filas × 7 columnas (configurable hasta 10×10).
+  \item Los jugadores alternan turnos colocando fichas en columnas.
+  \item Las fichas caen por gravedad hasta la fila más baja disponible.
+  \item Gana el primero en alinear \textbf{4 fichas} consecutivas en cualquier dirección.
+  \item Si el tablero se llena sin ganador, el juego termina en empate.
+\end{itemize}
+
+\section{Representación del Estado}
+
+El tablero se almacena como una \textbf{matriz bidimensional} \texttt{int[filas][columnas]} donde:
+\begin{itemize}
+  \item \texttt{0} = celda vacía
+  \item \texttt{1} = ficha del jugador
+  \item \texttt{2} = ficha de la CPU
+\end{itemize}
+
+La gravedad se modela buscando la fila más baja vacía de cada columna:
+\begin{lstlisting}
+int filaDisponible(int col) {
+    for (int f = filas-1; f >= 0; f--)
+        if (tablero[f][col] == 0) return f;
+    return -1; // columna llena
+}
+\end{lstlisting}
+
+\section{Algoritmo Negamax}
+
+\subsection{Función de evaluación}
+Negamax requiere evaluar tableros no terminales. La función \texttt{evaluar()} asigna puntuación analizando \textbf{ventanas de 4 celdas} en todas las direcciones:
+
+\begin{itemize}
+  \item 4 fichas propias: \texttt{+1000}
+  \item 3 fichas propias + 1 vacía: \texttt{+50}
+  \item 2 fichas propias + 2 vacías: \texttt{+10}
+  \item 3 fichas del oponente + 1 vacía: \texttt{-80}
+\end{itemize}
+
+\subsection{Pseudocódigo Negamax con poda alfa-beta}
+\begin{lstlisting}
+función negamax(tablero, profundidad, alfa, beta, jugador):
+    si profundidad == 0 o juegoTerminado(tablero):
+        retornar evaluar(tablero, jugador)
+
+    mejorPuntuacion = -infinito
+    para cada columna disponible (0..6):
+        fila = filaDisponible(tablero, col)
+        tablero[fila][col] = jugador
+        puntuacion = -negamax(tablero, profundidad-1,
+                              -beta, -alfa, oponente)
+        tablero[fila][col] = 0
+        mejorPuntuacion = max(mejorPuntuacion, puntuacion)
+        alfa = max(alfa, puntuacion)
+        si alfa >= beta: break  // poda
+    retornar mejorPuntuacion
+\end{lstlisting}
+
+\subsection{Poda alfa-beta}
+La poda alfa-beta elimina ramas del árbol que no pueden influir en el resultado final, reduciendo la complejidad de $O(b^d)$ a $O(b^{d/2})$ en el mejor caso.
+
+\section{Verificación de Victoria}
+
+Se comprueban las 4 direcciones posibles para cada celda del tablero:
+
+\begin{lstlisting}
+int[][] direcciones = {{0,1},{1,0},{1,1},{1,-1}};
+// horizontal, vertical, diagonal /, diagonal \
+
+boolean hay4Iguales(int fila, int col, int jugador) {
+    for (int[] dir : direcciones) {
+        int count = 0;
+        for (int k = 0; k < 4; k++) {
+            int f = fila + k*dir[0];
+            int c = col  + k*dir[1];
+            if (dentroDelTablero(f,c) &&
+                tablero[f][c] == jugador) count++;
+        }
+        if (count == 4) return true;
+    }
+    return false;
+}
+\end{lstlisting}
+
+\section{Interfaz Gráfica}
+
+La GUI fue construida con Java Swing:
+\begin{itemize}
+  \item \textbf{Panel de tablero}: dibujado con \texttt{paintComponent()} usando círculos de colores.
+  \item \textbf{Detección de columna}: al hacer clic, se calcula la columna por la posición X del mouse.
+  \item \textbf{Animación}: la ficha se dibuja inmediatamente al colocarla con \texttt{repaint()}.
+  \item \textbf{Selección de color}: diálogo inicial para que el jugador elija rojo o amarillo.
+\end{itemize}
+
+\section{Flujo de Ejecución}
+
+\begin{enumerate}
+  \item El jugador selecciona color y nivel de dificultad.
+  \item El jugador hace clic en una columna; la ficha cae a la fila más baja.
+  \item Se verifica victoria o empate.
+  \item La CPU ejecuta Negamax y coloca su ficha en la columna óptima.
+  \item Se repite hasta estado terminal.
+\end{enumerate}
+
+\end{document}

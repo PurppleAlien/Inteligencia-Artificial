@@ -1,0 +1,126 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{parskip}
+\usepackage{amsmath}
+\usepackage{hyperref}
+
+\geometry{margin=2.5cm}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray},
+  stringstyle=\color{orange},
+  breaklines=true,
+  frame=single,
+  language=Java,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'\i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1 {Á}{{\'A}}1 {É}{{\'E}}1 {Ó}{{\'O}}1
+}
+
+\title{\textbf{Gato (Tic-Tac-Toe) con Negamax}\\
+  \large Documentación Técnica}
+\author{Inteligencia Artificial}
+\date{}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Descripción del Proyecto}
+Implementación del juego \textbf{Gato} con inteligencia artificial basada en \textbf{Negamax}, una variante simplificada del algoritmo Minimax. A diferencia de la versión Minimax, este proyecto incluye \textbf{tres niveles de dificultad}: Fácil, Medio y Difícil.
+
+\section{Lógica del Juego}
+
+\subsection{Representación del estado}
+El tablero de 3×3 se almacena en un arreglo unidimensional de 9 enteros. Cada celda puede ser \texttt{VACÍA}, \texttt{JUGADOR} o \texttt{CPU}.
+
+\subsection{Niveles de dificultad}
+
+\begin{itemize}
+  \item \textbf{Fácil}: la CPU elige movimientos \textit{aleatorios} sin ninguna evaluación.
+  \item \textbf{Medio}: la CPU aplica Negamax con \textbf{profundidad limitada} (2-3 niveles), lo que la hace imperfecta.
+  \item \textbf{Difícil}: la CPU aplica Negamax \textbf{completo} sin límite de profundidad, siendo imbatible.
+\end{itemize}
+
+\section{Algoritmo Negamax}
+
+\subsection{Fundamento matemático}
+Negamax se basa en la simetría de los juegos de suma cero:
+\[
+  \text{minimax}(\text{MAX}, s) = -\text{minimax}(\text{MIN}, s)
+\]
+Esto permite escribir \textbf{una sola función} en lugar de dos (maximizador y minimizador).
+
+\subsection{Pseudocódigo}
+\begin{lstlisting}
+función negamax(tablero, profundidad, jugadorActual):
+    si hayGanador(tablero, jugadorActual):
+        retornar +10 - profundidad
+    si hayGanador(tablero, oponente(jugadorActual)):
+        retornar -10 + profundidad
+    si tableroLleno(tablero):
+        retornar 0
+
+    mejorPuntuacion = -infinito
+    para cada celda vacía en tablero:
+        tablero[celda] = jugadorActual
+        puntuacion = -negamax(tablero, profundidad+1,
+                              oponente(jugadorActual))
+        tablero[celda] = vacío
+        mejorPuntuacion = max(mejorPuntuacion, puntuacion)
+
+    retornar mejorPuntuacion
+\end{lstlisting}
+
+El signo negativo antes de la llamada recursiva invierte la perspectiva: lo que es bueno para el oponente es malo para mí.
+
+\subsection{Factor de profundidad}
+La puntuación ajustada por profundidad (\texttt{+10 - profundidad}) hace que el algoritmo prefiera victorias rápidas y derrote lo más tarde posible.
+
+\section{Arquitectura del Código}
+
+El proyecto se divide en dos clases:
+
+\begin{itemize}
+  \item \textbf{\texttt{Clase\_Gato.java}}: contiene la lógica del juego, el algoritmo Negamax y las utilidades de evaluación del tablero.
+  \item \textbf{\texttt{Gato\_Grafico.java}}: contiene la interfaz gráfica Swing, el menú de selección de dificultad y los listeners de eventos.
+\end{itemize}
+
+\section{Flujo de Ejecución}
+
+\begin{enumerate}
+  \item Al iniciar, se muestra un diálogo para seleccionar el nivel de dificultad.
+  \item El jugador humano hace clic en una celda vacía.
+  \item Se registra el movimiento y se verifica estado terminal.
+  \item Dependiendo del nivel, la CPU:
+    \begin{itemize}
+      \item \textit{Fácil}: elige celda aleatoria.
+      \item \textit{Medio}: ejecuta Negamax con profundidad máxima 3.
+      \item \textit{Difícil}: ejecuta Negamax completo.
+    \end{itemize}
+  \item Se actualiza la GUI y se verifica nuevamente el estado terminal.
+\end{enumerate}
+
+\section{Comparativa Minimax vs Negamax}
+
+\begin{center}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Característica} & \textbf{Minimax} & \textbf{Negamax} \\
+\hline
+Número de funciones & 2 (max + min) & 1 (unificada) \\
+Complejidad del código & Mayor & Menor \\
+Resultado & Idéntico & Idéntico \\
+Dificultades variables & Más complejo & Más sencillo \\
+\hline
+\end{tabular}
+\end{center}
+
+\end{document}

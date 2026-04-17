@@ -1,0 +1,154 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{parskip}
+\usepackage{amsmath}
+\usepackage{hyperref}
+
+\geometry{margin=2.5cm}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray},
+  stringstyle=\color{orange},
+  breaklines=true,
+  frame=single,
+  language=Java,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'\i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1 {Á}{{\'A}}1 {É}{{\'E}}1 {Ó}{{\'O}}1
+}
+
+\title{\textbf{Gato (Tic-Tac-Toe) con Minimax}\\
+  \large Documentación Técnica}
+\author{Inteligencia Artificial}
+\date{}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Descripción del Proyecto}
+Este proyecto implementa el juego clásico de \textbf{Gato (Tres en Raya)} con una inteligencia artificial basada en el algoritmo \textbf{Minimax}. La IA es teóricamente imbatible: siempre gana o empata contra cualquier jugador humano.
+
+El juego se desarrolló en \textbf{Java} con una interfaz gráfica construida con \textbf{Swing}. El tablero es de 3×3 celdas y el jugador humano compite directamente contra la CPU.
+
+\section{Lógica del Juego}
+
+\subsection{Estado del tablero}
+El tablero se representa como un arreglo de 9 enteros donde:
+\begin{itemize}
+  \item \texttt{0} = celda vacía
+  \item \texttt{1} = jugador humano (X)
+  \item \texttt{-1} = CPU (O)
+\end{itemize}
+
+\subsection{Condición de victoria}
+El juego verifica las 8 combinaciones ganadoras posibles: 3 filas, 3 columnas y 2 diagonales. Si alguna de estas líneas tiene los 3 valores iguales (y distintos de 0), hay un ganador.
+
+\section{Algoritmo Minimax}
+
+\subsection{Concepto}
+Minimax es un algoritmo de búsqueda adversarial para juegos de suma cero. Construye un \textbf{árbol de juego completo} desde el estado actual hasta todos los estados terminales, y asigna una puntuación a cada nodo:
+
+\begin{itemize}
+  \item \textbf{+10}: la CPU gana
+  \item \textbf{-10}: el humano gana
+  \item \textbf{0}: empate
+\end{itemize}
+
+La CPU (jugador MAX) elige el movimiento de mayor puntuación; el humano (jugador MIN) elegiría el de menor puntuación.
+
+\subsection{Pseudocódigo}
+\begin{lstlisting}
+función minimax(tablero, profundidad, esMaximizador):
+    si hayGanador(tablero, CPU):     retornar +10
+    si hayGanador(tablero, humano):  retornar -10
+    si tableroLleno(tablero):        retornar 0
+
+    si esMaximizador:
+        mejorValor = -infinito
+        para cada celda vacía:
+            tablero[celda] = CPU
+            valor = minimax(tablero, prof+1, false)
+            tablero[celda] = vacío
+            mejorValor = max(mejorValor, valor)
+        retornar mejorValor
+    sino:
+        mejorValor = +infinito
+        para cada celda vacía:
+            tablero[celda] = humano
+            valor = minimax(tablero, prof+1, true)
+            tablero[celda] = vacío
+            mejorValor = min(mejorValor, valor)
+        retornar mejorValor
+\end{lstlisting}
+
+\subsection{Elección del mejor movimiento}
+Para determinar el movimiento óptimo de la CPU:
+
+\begin{lstlisting}
+función mejorMovimiento(tablero):
+    mejorPuntuacion = -infinito
+    mejorCelda = -1
+    para cada celda vacía:
+        tablero[celda] = CPU
+        puntuacion = minimax(tablero, 0, false)
+        tablero[celda] = vacío
+        si puntuacion > mejorPuntuacion:
+            mejorPuntuacion = puntuacion
+            mejorCelda = celda
+    retornar mejorCelda
+\end{lstlisting}
+
+\subsection{Análisis de complejidad}
+El Gato tiene un espacio de estados máximo de $9! = 362{,}880$ tableros, pero con poda implícita se reduce significativamente. El árbol de juego completo tiene profundidad máxima 9 (9 celdas). La complejidad temporal es $O(b^d)$ donde $b$ es el factor de ramificación y $d$ la profundidad.
+
+\section{Arquitectura del Código}
+
+El proyecto se implementó en un único archivo \texttt{Gato\_SG\_GUI.java} que contiene:
+
+\begin{itemize}
+  \item \textbf{Clase principal}: extiende \texttt{JFrame} y contiene la GUI completa.
+  \item \textbf{Método \texttt{minimax()}}: implementación recursiva del algoritmo.
+  \item \textbf{Método \texttt{mejorMovimiento()}}: evalúa todas las celdas vacías y elige la óptima.
+  \item \textbf{Método \texttt{verificarGanador()}}: comprueba las 8 combinaciones ganadoras.
+  \item \textbf{ActionListeners}: detectan clic del jugador y disparan la respuesta de la CPU.
+\end{itemize}
+
+\section{Flujo de Ejecución}
+
+\begin{enumerate}
+  \item El jugador hace clic en una celda vacía del tablero.
+  \item Se registra el movimiento del humano en el arreglo de estado.
+  \item Se verifica si el humano ganó o si el tablero está lleno (empate).
+  \item Si el juego continúa, se llama a \texttt{mejorMovimiento()} que ejecuta Minimax.
+  \item La CPU coloca su ficha en la celda óptima.
+  \item Se verifica si la CPU ganó o si hay empate.
+  \item La interfaz se actualiza visualmente en cada paso.
+\end{enumerate}
+
+\section{Interfaz Gráfica}
+
+La GUI fue construida con \textbf{Java Swing}:
+\begin{itemize}
+  \item \texttt{JFrame}: ventana principal del juego.
+  \item \texttt{JButton[9]}: arreglo de 9 botones que representan las celdas del tablero.
+  \item \texttt{JLabel}: muestra el estado del juego (turno, ganador, empate).
+  \item \texttt{GridLayout(3,3)}: organiza los 9 botones en cuadrícula.
+\end{itemize}
+
+\section{Diferencia con Negamax}
+
+Minimax usa dos funciones separadas (MAX y MIN). Negamax unifica ambas aprovechando que el valor de un estado para el jugador actual es el negativo del valor para el oponente:
+
+\[f_{\text{negamax}}(s) = -f_{\text{negamax}}(\text{sucesor}(s))\]
+
+Ambos algoritmos producen el mismo resultado; Negamax es más compacto en código.
+
+\end{document}

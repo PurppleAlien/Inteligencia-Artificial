@@ -1,0 +1,146 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{parskip}
+\usepackage{amsmath}
+\usepackage{hyperref}
+
+\geometry{margin=2.5cm}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray},
+  breaklines=true, frame=single, language=Java,
+  numbers=left, numberstyle=\tiny\color{gray}
+}
+
+\title{\textbf{Problema de Rutas --- BFS y UCS (v1)}\\
+  \large Documentación Técnica}
+\author{Inteligencia Artificial}
+\date{}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Descripción del Proyecto}
+Visualizador de planificación de rutas sobre un grafo de ciudades mexicanas usando \textbf{BFS} (Búsqueda por Amplitud) y \textbf{UCS} (Búsqueda de Costo Uniforme). El usuario selecciona ciudad origen y destino, y el programa encuentra y muestra el camino óptimo.
+
+\section{Estructura del Grafo}
+
+El grafo se representa como una \textbf{lista de adyacencia}. Cada ciudad tiene una lista de vecinos con sus distancias en kilómetros:
+
+\begin{lstlisting}
+Map<String, List<Arista>> grafo = new HashMap<>();
+
+grafo.put("Acapulco", Arrays.asList(
+    new Arista("Ciudad de Mexico", 400),
+    new Arista("Puebla", 480)
+));
+// ... más ciudades
+\end{lstlisting}
+
+Las ciudades incluyen: Acapulco, Ciudad de México, Puebla, Veracruz, Oaxaca, Poza Rica, Huatulco, Querétaro, Pachuca, entre otras.
+
+\section{BFS --- Búsqueda por Amplitud}
+
+BFS explora todos los vecinos de un nodo antes de avanzar al siguiente nivel. Garantiza el camino con el \textbf{mínimo número de saltos} (ciudades intermedias).
+
+\begin{lstlisting}
+Nodo_BFS resolverBFS(String origen, String destino) {
+    Queue<Nodo_BFS> cola = new LinkedList<>();
+    Set<String> visitados = new HashSet<>();
+    cola.add(new Nodo_BFS(origen, 0, null));
+    visitados.add(origen);
+
+    while (!cola.isEmpty()) {
+        Nodo_BFS actual = cola.poll();
+        if (actual.ciudad.equals(destino)) return actual;
+
+        for (Arista a : grafo.get(actual.ciudad)) {
+            if (!visitados.contains(a.destino)) {
+                visitados.add(a.destino);
+                cola.add(new Nodo_BFS(a.destino,
+                    actual.costo + a.peso, actual));
+            }
+        }
+    }
+    return null;
+}
+\end{lstlisting}
+
+\section{UCS --- Búsqueda de Costo Uniforme}
+
+UCS usa una \textbf{cola de prioridad} ordenada por costo acumulado. Siempre expande el nodo de menor costo total, garantizando la ruta de \textbf{menor distancia}.
+
+\begin{lstlisting}
+Nodo_BFS resolverUCS(String origen, String destino) {
+    PriorityQueue<Nodo_BFS> cola =
+        new PriorityQueue<>(
+            Comparator.comparingInt(n -> n.costo));
+    Set<String> visitados = new HashSet<>();
+    cola.add(new Nodo_BFS(origen, 0, null));
+
+    while (!cola.isEmpty()) {
+        Nodo_BFS actual = cola.poll();
+        if (visitados.contains(actual.ciudad)) continue;
+        visitados.add(actual.ciudad);
+
+        if (actual.ciudad.equals(destino)) return actual;
+
+        for (Arista a : grafo.get(actual.ciudad)) {
+            if (!visitados.contains(a.destino)) {
+                cola.add(new Nodo_BFS(a.destino,
+                    actual.costo + a.peso, actual));
+            }
+        }
+    }
+    return null;
+}
+\end{lstlisting}
+
+\section{Diferencia entre BFS y UCS}
+
+\begin{center}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Característica} & \textbf{BFS} & \textbf{UCS} \\
+\hline
+Estructura & Cola FIFO & Cola de prioridad \\
+Criterio de expansión & Nivel (saltos) & Costo acumulado \\
+Solución óptima & En saltos & En distancia total \\
+Considera pesos & No & Sí \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Reconstrucción del Camino}
+
+Cada nodo guarda referencia al nodo padre. La ruta se reconstruye recursivamente:
+
+\begin{lstlisting}
+List<String> reconstruirRuta(Nodo_BFS nodo) {
+    List<String> ruta = new ArrayList<>();
+    while (nodo != null) {
+        ruta.add(0, nodo.ciudad);
+        nodo = nodo.padre;
+    }
+    return ruta;
+}
+\end{lstlisting}
+
+\section{Interfaz Gráfica}
+
+\begin{itemize}
+  \item Imagen del grafo de ciudades como fondo visual.
+  \item Combos para seleccionar ciudad origen y destino.
+  \item Botones \textbf{BFS} y \textbf{UCS} para ejecutar cada algoritmo.
+  \item Resultado mostrado: ruta completa, distancia total y número de ciudades.
+\end{itemize}
+
+\end{document}

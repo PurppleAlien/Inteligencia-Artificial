@@ -1,0 +1,127 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{parskip}
+\usepackage{hyperref}
+
+\geometry{margin=2.5cm}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray},
+  breaklines=true, frame=single, language=Java,
+  numbers=left, numberstyle=\tiny\color{gray}
+}
+
+\title{\textbf{Puzzle con DFS Recursivo}\\
+  \large Documentación Técnica}
+\author{Inteligencia Artificial}
+\date{}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Descripción del Proyecto}
+Visualizador comparativo de dos algoritmos de búsqueda aplicados a un puzzle: \textbf{DFS Recursivo} y \textbf{BFS}. Permite ver animadamente cómo cada algoritmo explora el espacio de estados hasta encontrar la solución.
+
+\section{DFS Recursivo}
+
+\subsection{Concepto}
+El DFS Recursivo explora tan profundo como sea posible por cada rama antes de retroceder (backtrack). Su implementación recursiva delega el manejo de la pila al sistema operativo.
+
+\subsection{Implementación}
+\begin{lstlisting}
+Nodo_DFS resolverDFS(Nodo_DFS nodo,
+                     List<Nodo_DFS> visitados) {
+    if (esMeta(nodo.getEstado())) return nodo;
+
+    for (int[] estadoHijo : generarHijos(
+                               nodo.getEstado())) {
+        if (!estaEnLista(visitados, estadoHijo)) {
+            Nodo_DFS hijo = new Nodo_DFS(estadoHijo);
+            hijo.setPadre(nodo);
+            visitados.add(hijo);
+
+            Nodo_DFS resultado =
+                resolverDFS(hijo, visitados);
+            if (resultado != null) return resultado;
+            // si retorna null, hace backtrack
+        }
+    }
+    return null; // no encontró solución por esta rama
+}
+\end{lstlisting}
+
+\subsection{Ventajas y desventajas}
+\begin{itemize}
+  \item \textbf{Ventaja}: código simple y elegante, menos memoria que BFS.
+  \item \textbf{Desventaja}: no garantiza solución óptima; riesgo de \texttt{StackOverflowError} en problemas profundos.
+\end{itemize}
+
+\section{BFS para Comparación}
+
+Se implementa BFS en la misma GUI para comparar visualmente cuántos pasos tarda cada algoritmo:
+
+\begin{lstlisting}
+Nodo_BFS resolverBFS(int[] estadoInicial) {
+    Queue<Nodo_BFS> cola = new LinkedList<>();
+    List<Nodo_BFS> visitados = new ArrayList<>();
+    Nodo_BFS raiz = new Nodo_BFS(estadoInicial);
+    cola.add(raiz);
+    visitados.add(raiz);
+
+    while (!cola.isEmpty()) {
+        Nodo_BFS actual = cola.poll();
+        if (esMeta(actual.getEstado())) return actual;
+
+        for (int[] hijo : generarHijos(
+                             actual.getEstado())) {
+            if (!estaVisitado(visitados, hijo)) {
+                Nodo_BFS nHijo = new Nodo_BFS(hijo);
+                nHijo.setPadre(actual);
+                visitados.add(nHijo);
+                cola.add(nHijo);
+            }
+        }
+    }
+    return null;
+}
+\end{lstlisting}
+
+\section{Animación de la Solución}
+
+Una vez encontrada la solución, se reconstruye el camino y se anima:
+
+\begin{lstlisting}
+void animarSolucion(List<int[]> camino) {
+    int[] paso = {0};
+    Timer timer = new Timer(500, null);
+    timer.addActionListener(e -> {
+        if (paso[0] < camino.size()) {
+            estadoActual = camino.get(paso[0]);
+            repaint();
+            paso[0]++;
+        } else {
+            ((Timer)e.getSource()).stop();
+        }
+    });
+    timer.start();
+}
+\end{lstlisting}
+
+\section{Interfaz Gráfica}
+
+\begin{itemize}
+  \item Visualización del puzzle con fichas numeradas.
+  \item Botón \textbf{Auto DFS}: ejecuta y anima la solución con DFS recursivo.
+  \item Botón \textbf{Auto BFS}: ejecuta y anima la solución con BFS.
+  \item Contador de pasos para comparar ambos algoritmos.
+\end{itemize}
+
+\end{document}

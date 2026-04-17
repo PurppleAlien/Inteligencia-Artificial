@@ -1,0 +1,120 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{parskip}
+\usepackage{amsmath}
+\usepackage{hyperref}
+
+\geometry{margin=2.5cm}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray},
+  breaklines=true, frame=single, language=Java,
+  numbers=left, numberstyle=\tiny\color{gray}
+}
+
+\title{\textbf{Programación Lineal con Backtracking}\\
+  \large Documentación Técnica}
+\author{Inteligencia Artificial}
+\date{}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Descripción del Proyecto}
+Dos aplicaciones que usan \textbf{Backtracking} para resolver problemas de programación lineal entera (PLE):
+\begin{enumerate}
+  \item \textbf{BacktrackingPLE}: solucionador genérico de PL entera.
+  \item \textbf{BacktrackingCarpinteriaPLE}: problema específico de optimización de ganancias.
+\end{enumerate}
+
+\section{Programación Lineal Entera}
+
+La PLE busca maximizar o minimizar una función objetivo lineal sujeta a restricciones lineales, con la condición de que las variables sean \textbf{enteras no negativas}:
+
+\[
+\text{Maximizar: } Z = c_1 x_1 + c_2 x_2 + \ldots + c_n x_n
+\]
+\[
+\text{Sujeto a: } a_{ij} x_j \leq b_i \quad \forall i,\quad x_j \geq 0,\ x_j \in \mathbb{Z}
+\]
+
+\section{Algoritmo de Backtracking para PLE}
+
+El backtracking explora el espacio de soluciones enteras de forma sistemática:
+
+\begin{lstlisting}
+void backtrack(int[] variables, int indice,
+               double[][] A, double[] b, double[] c) {
+    if (indice == variables.length) {
+        if (cumpleRestricciones(variables, A, b)) {
+            double z = calcularObjetivo(variables, c);
+            if (z > mejorZ) {
+                mejorZ = z;
+                mejorSolucion = variables.clone();
+            }
+        }
+        return;
+    }
+
+    // Calcular límite superior para la variable actual
+    int limSup = calcularLimiteSuperior(indice, A, b);
+
+    for (int v = 0; v <= limSup; v++) {
+        variables[indice] = v;
+        // Poda: si la solución parcial ya no es factible
+        if (esParcialmenteFactible(variables, indice,
+                                   A, b)) {
+            backtrack(variables, indice+1, A, b, c);
+        }
+    }
+    variables[indice] = 0; // restaurar
+}
+\end{lstlisting}
+
+\subsection{Poda}
+La \textbf{poda} elimina ramas que no pueden conducir a una solución óptima:
+\begin{itemize}
+  \item Si la asignación parcial ya viola alguna restricción, se descarta esa rama.
+  \item Si el límite superior de la función objetivo para la solución parcial es menor al mejor encontrado, se poda.
+\end{itemize}
+
+\section{Problema de la Carpintería}
+
+\subsection{Formulación}
+Una carpintería fabrica mesas ($x_1$) y sillas ($x_2$):
+
+\[
+\text{Maximizar: } Z = 5x_1 + 4x_2 \quad \text{(ganancia en \$)}
+\]
+\[
+\text{Sujeto a:}\quad
+6x_1 + 4x_2 \leq 24 \quad \text{(madera disponible)}
+\]
+\[
+x_1 + 2x_2 \leq 6 \quad \text{(horas de trabajo)}
+\]
+\[
+x_1, x_2 \geq 0, \quad x_1, x_2 \in \mathbb{Z}
+\]
+
+\subsection{Solución óptima}
+El backtracking encuentra $x_1 = 3,\ x_2 = \frac{3}{2}$, pero al requerir enteros: $x_1 = 3,\ x_2 = 1$ con $Z = 19$.
+
+\section{Interfaz Gráfica}
+
+\begin{itemize}
+  \item Formularios para ingresar coeficientes de la función objetivo y restricciones.
+  \item Tabla de restricciones dinámica (se pueden agregar/quitar filas).
+  \item Botón \textbf{Resolver} ejecuta el backtracking y muestra la solución óptima.
+  \item Muestra los valores de todas las variables y el valor óptimo de $Z$.
+\end{itemize}
+
+\end{document}

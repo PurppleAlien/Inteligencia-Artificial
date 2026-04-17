@@ -1,0 +1,141 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{parskip}
+\usepackage{amsmath}
+\usepackage{hyperref}
+
+\geometry{margin=2.5cm}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray},
+  breaklines=true, frame=single, language=Java,
+  numbers=left, numberstyle=\tiny\color{gray}
+}
+
+\title{\textbf{8-Puzzle Interactivo con Heurísticas}\\
+  \large Documentación Técnica}
+\author{Inteligencia Artificial}
+\date{}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Descripción del Problema}
+El \textbf{8-Puzzle} consiste en un tablero de 3×3 con 8 fichas numeradas del 1 al 8 y un espacio vacío. El objetivo es alcanzar el estado meta deslizando fichas al espacio vacío.
+
+\[
+\text{Estado meta:}\quad
+\begin{bmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \\ 7 & 8 & \_ \end{bmatrix}
+\]
+
+\section{Representación del Estado}
+
+El tablero se representa como un arreglo unidimensional de 9 enteros, donde el valor \texttt{0} representa el espacio vacío. Los movimientos legales desplazan el espacio vacío en una de las 4 direcciones (arriba, abajo, izquierda, derecha).
+
+\section{Heurísticas Implementadas}
+
+\subsection{Distancia Manhattan}
+Suma de distancias horizontal y vertical de cada ficha hasta su posición meta:
+\[
+h_M(n) = \sum_{i=1}^{8} \left(|fila_i - fila_i^*| + |col_i - col_i^*|\right)
+\]
+
+Esta heurística es \textbf{admisible} (nunca sobreestima) y \textbf{consistente}, lo que garantiza que la búsqueda encuentre la solución óptima.
+
+\subsection{Piezas Mal Colocadas}
+Cuenta el número de fichas que no están en su posición correcta:
+\[
+h_P(n) = |\{i : tablero[i] \neq meta[i],\ tablero[i] \neq 0\}|
+\]
+
+Es menos informada que Manhattan, por lo que genera más nodos antes de encontrar la solución.
+
+\section{Algoritmo de Búsqueda Heurística}
+
+Se implementa una variante de \textbf{Best-First Search} usando una cola de prioridad ordenada por el valor heurístico $h(n)$:
+
+\begin{lstlisting}
+Nodo_BFS resolver(int heuristica) {
+    PriorityQueue<Nodo_BFS> cola =
+        new PriorityQueue<>(Comparator.comparingInt(
+            n -> calcularH(n.getEstado(), heuristica)));
+    cola.add(estadoInicial);
+    visitados.add(estadoInicial);
+
+    while (!cola.isEmpty()) {
+        Nodo_BFS actual = cola.poll();
+        if (esMeta(actual)) return actual;
+
+        for (Nodo_BFS hijo : generarHijos(actual)) {
+            if (!estaVisitado(hijo)) {
+                visitados.add(hijo);
+                cola.add(hijo);
+            }
+        }
+    }
+    return null;
+}
+\end{lstlisting}
+
+\section{Cálculo de la Heurística Manhattan}
+
+\begin{lstlisting}
+int manhattan(int[] tablero) {
+    int total = 0;
+    for (int i = 0; i < 9; i++) {
+        if (tablero[i] == 0) continue;
+        int valor = tablero[i] - 1;
+        int filaActual = i / 3;
+        int colActual  = i % 3;
+        int filaMeta   = valor / 3;
+        int colMeta    = valor % 3;
+        total += Math.abs(filaActual - filaMeta)
+               + Math.abs(colActual  - colMeta);
+    }
+    return total;
+}
+\end{lstlisting}
+
+\section{Generación de Movimientos}
+
+Los movimientos válidos se determinan por la posición del espacio vacío:
+
+\begin{lstlisting}
+List<int[]> generarHijos(int[] estado) {
+    int pos = posicionVacio(estado); // índice del 0
+    int fila = pos / 3, col = pos % 3;
+    int[][] dirs = {{-1,0},{1,0},{0,-1},{0,1}};
+    List<int[]> hijos = new ArrayList<>();
+
+    for (int[] d : dirs) {
+        int nf = fila + d[0], nc = col + d[1];
+        if (nf >= 0 && nf < 3 && nc >= 0 && nc < 3) {
+            int[] hijo = estado.clone();
+            int npos = nf*3 + nc;
+            hijo[pos] = hijo[npos];
+            hijo[npos] = 0;
+            hijos.add(hijo);
+        }
+    }
+    return hijos;
+}
+\end{lstlisting}
+
+\section{Interfaz Gráfica}
+
+\begin{itemize}
+  \item El tablero se dibuja con \texttt{JButton[9]} en un \texttt{GridLayout(3,3)}.
+  \item El botón \textbf{Mezclar} aplica 50 movimientos aleatorios válidos.
+  \item Al presionar \textbf{Resolver}, se ejecuta el algoritmo y se anima la solución paso a paso.
+  \item El contador muestra los pasos de la solución encontrada.
+\end{itemize}
+
+\end{document}

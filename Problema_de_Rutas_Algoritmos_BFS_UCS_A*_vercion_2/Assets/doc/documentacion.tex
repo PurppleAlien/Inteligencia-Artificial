@@ -1,0 +1,129 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{parskip}
+\usepackage{amsmath}
+\usepackage{hyperref}
+
+\geometry{margin=2.5cm}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray},
+  breaklines=true, frame=single, language=Java,
+  numbers=left, numberstyle=\tiny\color{gray}
+}
+
+\title{\textbf{Problema de Rutas --- BFS, UCS y A* (v2)}\\
+  \large Documentación Técnica}
+\author{Inteligencia Artificial}
+\date{}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Descripción del Proyecto}
+Versión extendida del planificador de rutas que agrega el algoritmo \textbf{A*} con soporte de heurísticas. Implementa BFS, UCS y A* sobre el mismo grafo de ciudades mexicanas.
+
+\section{Algoritmo A* (A-Star)}
+
+\subsection{Fundamento}
+A* combina el costo real acumulado $g(n)$ con una estimación heurística $h(n)$ de la distancia restante al destino:
+\[
+f(n) = g(n) + h(n)
+\]
+
+Para que A* sea óptimo, la heurística debe ser \textbf{admisible}: nunca sobreestimar la distancia real.
+
+\subsection{Heurística utilizada}
+Se usa la distancia en línea recta (distancia euclidiana) entre ciudades, calculada con sus coordenadas geográficas aproximadas:
+
+\begin{lstlisting}
+double heuristica(String ciudad, String destino) {
+    double[] coordCiudad  = coordenadas.get(ciudad);
+    double[] coordDestino = coordenadas.get(destino);
+    double dLat = coordCiudad[0] - coordDestino[0];
+    double dLon = coordCiudad[1] - coordDestino[1];
+    // factor 111 km por grado de latitud
+    return Math.sqrt(dLat*dLat + dLon*dLon) * 111;
+}
+\end{lstlisting}
+
+Esta heurística es admisible porque la línea recta es siempre menor o igual que la ruta real por carretera.
+
+\subsection{Implementación A*}
+\begin{lstlisting}
+Nodo resolverAEstrella(String origen, String destino) {
+    PriorityQueue<Nodo> abiertos =
+        new PriorityQueue<>(Comparator.comparingDouble(
+            n -> n.g + heuristica(n.ciudad, destino)));
+    Set<String> cerrados = new HashSet<>();
+
+    abiertos.add(new Nodo(origen, 0, null));
+
+    while (!abiertos.isEmpty()) {
+        Nodo actual = abiertos.poll();
+        if (cerrados.contains(actual.ciudad)) continue;
+        cerrados.add(actual.ciudad);
+
+        if (actual.ciudad.equals(destino)) return actual;
+
+        for (Arista a : grafo.get(actual.ciudad)) {
+            if (!cerrados.contains(a.destino)) {
+                double nuevoG = actual.g + a.peso;
+                abiertos.add(new Nodo(a.destino,
+                                      nuevoG, actual));
+            }
+        }
+    }
+    return null;
+}
+\end{lstlisting}
+
+\section{Comparativa de los Tres Algoritmos}
+
+\begin{center}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Característica} & \textbf{BFS} & \textbf{UCS} & \textbf{A*} \\
+\hline
+Estructura & Cola FIFO & Cola prioridad & Cola prioridad \\
+Criterio & Saltos & $g(n)$ & $f(n)=g(n)+h(n)$ \\
+Heurística & No & No & Sí \\
+Óptimo en costo & No & Sí & Sí \\
+Nodos explorados & Más & Medio & Menos \\
+Velocidad & Media & Lenta & Rápida \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Clase ResultadoBusqueda}
+
+Para unificar la salida de los tres algoritmos se usa una clase resultado:
+
+\begin{lstlisting}
+class ResultadoBusqueda {
+    List<String> ruta;
+    double costoTotal;
+    int nodosExplorados;
+    long tiempoMs;
+}
+\end{lstlisting}
+
+Esto permite mostrar comparativas de rendimiento entre los tres algoritmos para la misma consulta.
+
+\section{Interfaz Gráfica}
+
+\begin{itemize}
+  \item Tres botones: \textbf{BFS}, \textbf{UCS}, \textbf{A*}.
+  \item Muestra ruta, costo y nodos explorados para comparar eficiencia.
+  \item La ruta se visualiza resaltada sobre el grafo de ciudades.
+\end{itemize}
+
+\end{document}

@@ -1,0 +1,169 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{parskip}
+\usepackage{amsmath}
+\usepackage{hyperref}
+
+\geometry{margin=2.5cm}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray},
+  breaklines=true,
+  frame=single,
+  language=Java,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'\i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1 {Á}{{\'A}}1 {É}{{\'E}}1 {Ó}{{\'O}}1
+}
+
+\title{\textbf{Misioneros y Caníbales}\\
+  \large BFS, DFS y DFS Recursivo --- Documentación Técnica}
+\author{Inteligencia Artificial}
+\date{}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Descripción del Problema}
+El problema de \textbf{Misioneros y Caníbales} es un rompecabezas clásico de IA. Tres misioneros y tres caníbales deben cruzar un río en un bote con capacidad máxima de 2 personas, cumpliendo la restricción de que los caníbales nunca superen en número a los misioneros en ninguna orilla.
+
+\subsection{Representación del estado}
+Cada estado se codifica como un vector de 5 enteros:
+\[ [m_{izq},\ c_{izq},\ bote,\ m_{der},\ c_{der}] \]
+
+\begin{itemize}
+  \item \textbf{Estado inicial}: $[3, 3, 0, 0, 0]$
+  \item \textbf{Estado meta}: $[0, 0, 1, 3, 3]$
+  \item \textbf{bote}: 0 = orilla izquierda, 1 = orilla derecha
+\end{itemize}
+
+\subsection{Restricciones de validez}
+Un estado es válido si:
+\begin{enumerate}
+  \item Todos los valores son $\geq 0$ y $\leq 3$.
+  \item Si $m_{izq} > 0$, entonces $m_{izq} \geq c_{izq}$.
+  \item Si $m_{der} > 0$, entonces $m_{der} \geq c_{der}$.
+\end{enumerate}
+
+\section{Movimientos Posibles}
+Desde cada estado se generan hasta 5 movimientos posibles (lo que cabe en el bote):
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+\textbf{Misioneros} & \textbf{Caníbales} \\
+\hline
+1 & 0 \\
+2 & 0 \\
+0 & 1 \\
+0 & 2 \\
+1 & 1 \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{BFS --- Búsqueda por Amplitud}
+
+BFS usa una \textbf{cola FIFO} para explorar los estados nivel por nivel, garantizando la solución óptima (menor número de pasos).
+
+\begin{lstlisting}
+Nodo_BFS resolver() {
+    cola.encolar(estadoInicial);
+    visitados.add(estadoInicial);
+
+    while (!cola.estaVacia()) {
+        Nodo_BFS actual = cola.desencolar();
+        if (esSolucion(actual)) return actual;
+
+        for (Nodo_BFS hijo : generarHijos(actual)) {
+            if (!estaVisitado(hijo)) {
+                visitados.add(hijo);
+                cola.encolar(hijo);
+            }
+        }
+    }
+    return null;
+}
+\end{lstlisting}
+
+\textbf{Resultado}: solución óptima en \textbf{11 pasos}, 15 nodos generados.
+
+\section{DFS --- Búsqueda por Profundidad con Pila}
+
+DFS usa una \textbf{pila LIFO} para explorar el camino más profundo primero. No garantiza la solución óptima pero usa menos memoria que BFS.
+
+\begin{lstlisting}
+Nodo_DFS resolver() {
+    pila.apilar(estadoInicial);
+    visitados.add(estadoInicial);
+
+    while (!pila.estaVacia()) {
+        Nodo_DFS actual = pila.desapilar();
+        if (esSolucion(actual)) return actual;
+
+        for (Nodo_DFS hijo : generarHijos(actual)) {
+            if (!estaVisitado(hijo)) {
+                visitados.add(hijo);
+                pila.apilar(hijo);
+            }
+        }
+    }
+    return null;
+}
+\end{lstlisting}
+
+\section{DFS Recursivo}
+
+Implementación recursiva del DFS. Más elegante en código pero con riesgo de \texttt{StackOverflowError} en problemas más profundos.
+
+\begin{lstlisting}
+Nodo_DFS resolverRecursivo(Nodo_DFS nodo,
+                            Set<String> visitados) {
+    if (esSolucion(nodo)) return nodo;
+
+    for (Nodo_DFS hijo : generarHijos(nodo)) {
+        String clave = estadoAClave(hijo);
+        if (!visitados.contains(clave)) {
+            visitados.add(clave);
+            Nodo_DFS resultado =
+                resolverRecursivo(hijo, visitados);
+            if (resultado != null) return resultado;
+        }
+    }
+    return null;
+}
+\end{lstlisting}
+
+\section{Reconstrucción del Camino}
+
+Cada nodo guarda una referencia al nodo padre. Para reconstruir el camino desde la solución hasta el estado inicial se recorre la cadena de padres:
+
+\begin{lstlisting}
+List<int[]> reconstruirCamino(Nodo_BFS solucion) {
+    List<int[]> camino = new ArrayList<>();
+    Nodo_BFS nodo = solucion;
+    while (nodo != null) {
+        camino.add(0, nodo.getEstado());
+        nodo = nodo.getPadre();
+    }
+    return camino;
+}
+\end{lstlisting}
+
+\section{Interfaz Gráfica}
+
+La clase \texttt{InterfazCyM} implementa:
+\begin{itemize}
+  \item Representación visual de ambas orillas con personajes dibujados en \texttt{paintComponent()}.
+  \item Botones para mover 1M, 2M, 1C, 2C ó 1M+1C manualmente.
+  \item Botón \textbf{``Resolver (BFS)''} que ejecuta BFS y anima el camino solución con un \texttt{javax.swing.Timer} de 700ms entre pasos.
+\end{itemize}
+
+\end{document}

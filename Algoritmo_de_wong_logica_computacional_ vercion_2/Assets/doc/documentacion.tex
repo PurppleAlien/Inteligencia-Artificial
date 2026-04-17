@@ -1,0 +1,119 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{parskip}
+\usepackage{amsmath}
+\usepackage{hyperref}
+
+\geometry{margin=2.5cm}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray},
+  breaklines=true, frame=single, language=Java,
+  numbers=left, numberstyle=\tiny\color{gray}
+}
+
+\title{\textbf{Algoritmo de Wang --- Demostrador de Teoremas v2}\\
+  \large Documentación Técnica}
+\author{Inteligencia Artificial}
+\date{}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Descripción del Proyecto}
+Segunda versión mejorada del demostrador de Wang. Agrega UI enriquecida con salida a colores, selector de ejemplos predefinidos, soporte de más reglas de inferencia (Modus Ponens, Silogismo Hipotético, De Morgan, Distribución, Contrapositiva) y visualización del árbol de prueba.
+
+\section{Reglas de Inferencia Adicionales}
+
+\subsection{Modus Ponens}
+\[ \frac{A, \quad A \rightarrow B}{B} \]
+
+\subsection{Silogismo Hipotético}
+\[ \frac{A \rightarrow B, \quad B \rightarrow C}{A \rightarrow C} \]
+
+\subsection{Leyes de De Morgan}
+\[ \neg(A \wedge B) \equiv \neg A \vee \neg B \]
+\[ \neg(A \vee B) \equiv \neg A \wedge \neg B \]
+
+\subsection{Distribución}
+\[ A \wedge (B \vee C) \equiv (A \wedge B) \vee (A \wedge C) \]
+
+\subsection{Contrapositiva}
+\[ (A \rightarrow B) \equiv (\neg B \rightarrow \neg A) \]
+
+\section{Implementación de Reglas}
+
+\begin{lstlisting}
+String aplicarRegla(String formula, String regla) {
+    switch (regla) {
+        case "MODUS_PONENS":
+            // si A y A->B están en antecedente,
+            // agregar B
+            return aplicarModusPonens(formula);
+
+        case "DE_MORGAN_NEG_AND":
+            // !A&B  -->  !A | !B
+            if (formula.matches("!\\((.+)&(.+)\\)")) {
+                String[] p = extraerOperandos(formula);
+                return "!" + p[0] + " | !" + p[1];
+            }
+            break;
+
+        case "CONTRAPOSITIVE":
+            // A->B  -->  !B->!A
+            if (formula.contains("->")) {
+                String[] p = formula.split("->");
+                return "!" + p[1] + "->" + "!" + p[0];
+            }
+            break;
+    }
+    return formula;
+}
+\end{lstlisting}
+
+\section{Selector de Ejemplos}
+
+La v2 incluye ejemplos predefinidos seleccionables desde un \texttt{JComboBox}:
+
+\begin{itemize}
+  \item Modus Ponens: $\{P, P \rightarrow Q\} \vdash Q$
+  \item Silogismo Hipotético: $\{P \rightarrow Q, Q \rightarrow R\} \vdash P \rightarrow R$
+  \item De Morgan: $\{\neg(P \wedge Q)\} \vdash \neg P \vee \neg Q$
+  \item Distribución: $\{P \wedge (Q \vee R)\} \vdash (P \wedge Q) \vee (P \wedge R)$
+\end{itemize}
+
+\section{Visualización Mejorada}
+
+\begin{itemize}
+  \item Cada regla aplicada se muestra en color distinto en el panel de salida.
+  \item Verde: rama cerrada (válida).
+  \item Rojo: rama abierta (posiblemente refutada).
+  \item Azul: regla aplicada (paso intermedio).
+  \item El árbol de derivación se muestra con indentación para visualizar la estructura.
+\end{itemize}
+
+\section{Diferencias con v1}
+
+\begin{center}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Característica} & \textbf{v1} & \textbf{v2} \\
+\hline
+Reglas implementadas & 5 & 10+ \\
+Ejemplos predefinidos & No & Sí \\
+Salida a colores & No & Sí \\
+Árbol de derivación & No & Sí \\
+Bicondicional & No & Parcial \\
+\hline
+\end{tabular}
+\end{center}
+
+\end{document}

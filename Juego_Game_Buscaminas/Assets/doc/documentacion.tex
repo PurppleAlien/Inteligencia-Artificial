@@ -1,0 +1,133 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{parskip}
+\usepackage{amsmath}
+\usepackage{hyperref}
+
+\geometry{margin=2.5cm}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray},
+  breaklines=true,
+  frame=single,
+  language=Java,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'\i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1 {Á}{{\'A}}1 {É}{{\'E}}1 {Ó}{{\'O}}1
+}
+
+\title{\textbf{Buscaminas con Backtracking}\\
+  \large Documentación Técnica}
+\author{Inteligencia Artificial}
+\date{}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Descripción del Proyecto}
+Implementación del clásico juego \textbf{Buscaminas} en Java con Swing. Incorpora un algoritmo de \textbf{Backtracking} para la colocación de minas y un \textbf{flood-fill iterativo} para la expansión de celdas vacías. Incluye múltiples niveles de dificultad, contador de minas y temporizador.
+
+\section{Estructura del Tablero}
+
+Cada celda del tablero es un objeto con los campos:
+\begin{itemize}
+  \item \texttt{esMina}: booleano, indica si contiene mina.
+  \item \texttt{revelada}: booleano, si el jugador la descubrió.
+  \item \texttt{marcada}: booleano, si tiene bandera del jugador.
+  \item \texttt{minasVecinas}: entero (0-8), cuenta de minas adyacentes.
+\end{itemize}
+
+\section{Niveles de Dificultad}
+
+\begin{center}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Nivel} & \textbf{Tablero} & \textbf{Minas} \\
+\hline
+Fácil & 9×9 & 10 \\
+Intermedio & 16×16 & 40 \\
+Difícil & 16×30 & 99 \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Algoritmo de Backtracking para Colocación de Minas}
+
+Las minas se colocan aleatoriamente usando backtracking para garantizar que el número solicitado de minas se distribuya correctamente sin superposición:
+
+\begin{lstlisting}
+void colocarMinas(int totalMinas, int filaSegura,
+                  int colSegura) {
+    int colocadas = 0;
+    Random rand = new Random();
+    while (colocadas < totalMinas) {
+        int f = rand.nextInt(filas);
+        int c = rand.nextInt(cols);
+        // no colocar en celda segura ni en otra mina
+        if (!tablero[f][c].esMina &&
+            !(f == filaSegura && c == colSegura)) {
+            tablero[f][c].esMina = true;
+            colocadas++;
+        }
+    }
+}
+\end{lstlisting}
+
+Después de colocar las minas, se recorre el tablero para calcular el conteo de minas vecinas para cada celda.
+
+\section{Flood-Fill Iterativo}
+
+Cuando el jugador revela una celda con \textbf{0 minas vecinas}, se expanden automáticamente todas las celdas adyacentes vacías. Esto se implementa con \textbf{flood-fill iterativo usando una pila} para evitar \texttt{StackOverflowError} en tableros grandes.
+
+\begin{lstlisting}
+void expandir(int filaInicio, int colInicio) {
+    Stack<int[]> pila = new Stack<>();
+    pila.push(new int[]{filaInicio, colInicio});
+
+    while (!pila.isEmpty()) {
+        int[] celda = pila.pop();
+        int f = celda[0], c = celda[1];
+
+        if (f < 0 || f >= filas || c < 0 || c >= cols)
+            continue;
+        if (tablero[f][c].revelada) continue;
+
+        tablero[f][c].revelada = true;
+
+        if (tablero[f][c].minasVecinas == 0) {
+            // expandir los 8 vecinos
+            for (int df = -1; df <= 1; df++)
+                for (int dc = -1; dc <= 1; dc++)
+                    if (df != 0 || dc != 0)
+                        pila.push(new int[]{f+df, c+dc});
+        }
+    }
+}
+\end{lstlisting}
+
+\subsection{Por qué iterativo en lugar de recursivo}
+En tableros grandes (16×30 con 480 celdas), la recursión puede generar cientos de llamadas en la pila del sistema, causando \texttt{StackOverflowError}. El enfoque iterativo usa una pila en el \textit{heap}, que tiene capacidad ilimitada práctica.
+
+\section{Interfaz Gráfica}
+
+\begin{itemize}
+  \item Cada celda es un \texttt{JButton} con tamaño fijo de 30×30 píxeles.
+  \item \textbf{Clic izquierdo}: revela la celda (dispara flood-fill si es necesario).
+  \item \textbf{Clic derecho}: coloca/quita bandera de mina.
+  \item El \textbf{contador de minas} y el \textbf{temporizador} se actualizan cada segundo con un \texttt{javax.swing.Timer}.
+  \item Al descubrir una mina, se revelan todas las minas y el juego termina.
+\end{itemize}
+
+\section{Condición de Victoria}
+
+El jugador gana cuando todas las celdas sin mina han sido reveladas. Esto se verifica contando celdas reveladas y comparando con \texttt{(totalCeldas - totalMinas)}.
+
+\end{document}
