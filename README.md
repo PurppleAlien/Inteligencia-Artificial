@@ -1,4 +1,4 @@
-# Inteligencia Artificial — Proyectos Java
+# Portafolio - Inteligencia Artificial — Proyectos Java
 
 Colección de 15 proyectos de **Inteligencia Artificial** implementados en Java con interfaz gráfica (Swing). Cubre algoritmos de búsqueda, juegos con IA, lógica proposicional y optimización.
 
